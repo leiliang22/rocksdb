@@ -40,6 +40,8 @@
 
 namespace ROCKSDB_NAMESPACE {
 
+// memtable 的内存形式，开始rocksdb之旅
+
 template<typename Key, class Comparator>
 class SkipList {
  private:
