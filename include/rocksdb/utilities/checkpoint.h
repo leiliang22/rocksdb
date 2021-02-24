@@ -19,6 +19,7 @@ class ColumnFamilyHandle;
 struct LiveFileMetaData;
 struct ExportImportFilesMetaData;
 
+// Checkpoint 的使用场景是？ Create ， CreateCheckpoint 两个接口的区别是？
 class Checkpoint {
  public:
   // Creates a Checkpoint object to be used for creating openable snapshots
