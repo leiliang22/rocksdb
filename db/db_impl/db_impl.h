@@ -108,8 +108,8 @@ class Directories {
   FSDirectory* GetDbDir() { return db_dir_.get(); }
 
  private:
-  std::unique_ptr<FSDirectory> db_dir_;
-  std::vector<std::unique_ptr<FSDirectory>> data_dirs_;
+  std::unique_ptr<FSDirectory> db_dir_;  // db目录与data目录的区别是？
+  std::vector<std::unique_ptr<FSDirectory>> data_dirs_;  // 所有cf的目录
   std::unique_ptr<FSDirectory> wal_dir_;
 };
 
@@ -129,7 +129,7 @@ class Directories {
 class DBImpl : public DB {
  public:
   DBImpl(const DBOptions& options, const std::string& dbname,
-         const bool seq_per_batch = false, const bool batch_per_txn = true);
+         const bool seq_per_batch = false, const bool batch_per_txn = true);  // seq per batch 的作用是？还有batch per txn
   // No copying allowed
   DBImpl(const DBImpl&) = delete;
   void operator=(const DBImpl&) = delete;
@@ -138,7 +138,10 @@ class DBImpl : public DB {
 
   // ---- Implementations of the DB interface ----
 
-  using DB::Resume;
+  using DB::Resume; // 如果基类中成员函数有多个重载版本，派生类可以重定义所继承的0个或多个版本，但是通过派生类型的对象只能访问派生类型重定义的那些版本，
+                    // 如果派生类想要访问所有的重载版本，则要么派生类重定义所有版本，要么一个都不定义。当只需要重定义一个函数时，此时可以用using加重载成员名
+                    // 1.  如果派生类与基类函数同名，但是参数不同，此时，无论是否有virtual关键字，基类同名函数都将被屏蔽
+                    // 2.  如果派生类的函数与基类的函数同名，并且参数也相同，基类没有virtual的同名函数会被屏蔽。有virtual的函数怎么处理调用优先级？
   virtual Status Resume() override;
 
   using DB::Put;
@@ -153,6 +156,8 @@ class DBImpl : public DB {
   virtual Status Delete(const WriteOptions& options,
                         ColumnFamilyHandle* column_family,
                         const Slice& key) override;
+
+  // 为了防止大量删除时导致存在多个版本的key，最终到时seek效率变慢，SingleDelete可以用来对只写过一次的数据进行彻底删除
   using DB::SingleDelete;
   virtual Status SingleDelete(const WriteOptions& options,
                               ColumnFamilyHandle* column_family,
@@ -167,7 +172,7 @@ class DBImpl : public DB {
                      PinnableSlice* value) override;
   virtual Status Get(const ReadOptions& options,
                      ColumnFamilyHandle* column_family, const Slice& key,
-                     PinnableSlice* value, std::string* timestamp) override;
+                     PinnableSlice* value, std::string* timestamp) override;  // 时间戳这个接口的目的在于？
 
   using DB::GetMergeOperands;
   Status GetMergeOperands(const ReadOptions& options,
@@ -184,7 +189,7 @@ class DBImpl : public DB {
     return GetImpl(options, key, get_impl_options);
   }
 
-  using DB::MultiGet;
+  using DB::MultiGet;    // 学习下这个接口，为什么要设计这么多的MultiGet接口，我能想到的几个场景：1. 单cf multiget, 2. 跨cf multiget
   virtual std::vector<Status> MultiGet(
       const ReadOptions& options,
       const std::vector<ColumnFamilyHandle*>& column_family,
@@ -215,7 +220,7 @@ class DBImpl : public DB {
                         Status* statuses,
                         const bool sorted_input = false) override;
 
-  virtual void MultiGet(const ReadOptions& options, const size_t num_keys,
+  virtual void MultiGet(const ReadOptions& options, const size_t num_keys,   // 跨多个cf操作？
                         ColumnFamilyHandle** column_families, const Slice* keys,
                         PinnableSlice* values, Status* statuses,
                         const bool sorted_input = false) override;
@@ -264,7 +269,7 @@ class DBImpl : public DB {
 
   virtual const Snapshot* GetSnapshot() override;
   virtual void ReleaseSnapshot(const Snapshot* snapshot) override;
-  using DB::GetProperty;
+  using DB::GetProperty; 
   virtual bool GetProperty(ColumnFamilyHandle* column_family,
                            const Slice& property, std::string* value) override;
   using DB::GetMapProperty;
